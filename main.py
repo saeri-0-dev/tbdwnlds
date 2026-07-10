@@ -126,8 +126,6 @@ def download_video(url: str, title: str, height: int) -> Path:
 
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
-
-        # Если yt-dlp знает конечное имя — берём его
         requested = info.get("requested_downloads")
         if requested and isinstance(requested, list):
             fp = requested[0].get("filepath")
@@ -161,7 +159,6 @@ def download_audio(url: str, title: str, abr: int) -> Path:
         if requested and isinstance(requested, list):
             fp = requested[0].get("filepath")
             if fp:
-                # filepath может быть до постпроцессинга, поэтому подменим на .mp3
                 return Path(fp).with_suffix(".mp3")
 
         base_path = Path(ydl.prepare_filename(info)).with_suffix("")
@@ -240,7 +237,6 @@ async def on_pick(call: CallbackQuery) -> None:
     sess = SESSIONS.get(user_id)
     if not sess:
         await call.answer("Сессия устарела. Пришли ссылку ещё раз.", show_alert=True)
-        # желательно убрать клавиатуру
         try:
             await call.message.edit_reply_markup(reply_markup=None)
         except Exception:
@@ -285,7 +281,6 @@ async def on_pick(call: CallbackQuery) -> None:
         title = sess["title"]
         url = sess["url"]
 
-        # Чтобы не было “часиков” у кнопки
         await call.answer()
 
         if media_type == "video":
@@ -294,7 +289,7 @@ async def on_pick(call: CallbackQuery) -> None:
             try:
                 path = await asyncio.to_thread(download_video, url, title, height)
                 await call.message.answer(
-                    "✅ Готово!\n"
+                    "Готово!\n"
                     f"Скачано: {path.name}\n"
                     f"Путь: {path}"
                 )
@@ -307,7 +302,7 @@ async def on_pick(call: CallbackQuery) -> None:
             try:
                 path = await asyncio.to_thread(download_audio, url, title, abr)
                 await call.message.answer(
-                    "✅ Готово!\n"
+                    "Готово!\n"
                     f"Скачано: {path.name}\n"
                     f"Путь: {path}"
                 )
